@@ -18,6 +18,10 @@ class BeritaController extends Controller
         if ($request->ajax()) {
             $query = Berita::with('websites');
 
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->editColumn('status', function ($row) {

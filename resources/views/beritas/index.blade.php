@@ -2,21 +2,35 @@
     <div class="py-12">
         <!-- Premium Header -->
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-                <div>
-                    <h2 class="font-bold text-4xl text-slate-800 tracking-tight">
-                        {{ __('Manajemen Berita') }}
-                    </h2>
-                    <p class="mt-2 text-slate-500">
-                        {{ __('Kelola konten berita dan distribusinya ke berbagai website aktif.') }}
-                    </p>
-                </div>
-                <div class="flex items-center gap-3 w-full md:w-auto">
+            <div class="flex items-center justify-between gap-4">
+                <h2 class="font-bold text-2xl text-slate-800 leading-tight flex items-center gap-3">
+                    <div class="p-2 bg-primary-100 rounded-xl">
+                        <svg class="w-6 h-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2v6h6" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 12h10M7 16h10" />
+                        </svg>
+                    </div>
+                    {{ __('Manajemen Berita') }}
+                </h2>
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 outline-none focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-500 transition-all">
+                        <span
+                            class="text-xs font-bold text-slate-400 uppercase tracking-wider">{{ __('Filter Status:') }}</span>
+                        <select id="filter-status"
+                            class="text-sm font-bold text-slate-700 bg-transparent border-none p-0 focus:ring-0 cursor-pointer min-w-[120px]">
+                            <option value="">{{ __('Semua Status') }}</option>
+                            <option value="Published">{{ __('Published') }}</option>
+                            <option value="Draft">{{ __('Draft') }}</option>
+                        </select>
+                    </div>
                     <a href="{{ route('beritas.create') }}"
-                        class="inline-flex items-center px-6 py-3 bg-primary-600 border border-transparent rounded-2xl font-bold text-sm text-white hover:bg-primary-700 active:scale-95 transition-all duration-300 shadow-xl shadow-primary-500/25 whitespace-nowrap">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-primary-700 active:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-lg shadow-primary-200 gap-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                         {{ __('Tambah Berita') }}
                     </a>
@@ -88,11 +102,14 @@
 
     <script>
         $(document).ready(function() {
-            var table = $('#beritas-table').DataTable({
+            let table = $('#beritas-table').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
                     url: "{{ route('beritas.index') }}",
+                    data: function(d) {
+                        d.status = $('#filter-status').val();
+                    }
                 },
                 columns: [{
                         data: 'DT_RowIndex',
@@ -148,6 +165,10 @@
                     $('.dataTables_paginate').addClass('mt-6 flex justify-end');
                     $('.dataTables_filter').addClass('mb-4');
                 }
+            });
+
+            $('#filter-status').change(function() {
+                table.draw();
             });
         });
     </script>

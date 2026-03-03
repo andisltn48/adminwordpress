@@ -10,7 +10,19 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $beritaStats = [
+        'total' => \App\Models\Berita::count(),
+        'published' => \App\Models\Berita::where('status', 'Published')->count(),
+        'draft' => \App\Models\Berita::where('status', 'Draft')->count(),
+    ];
+
+    $websiteStats = [
+        'total' => \App\Models\Website::count(),
+        'aktif' => \App\Models\Website::where('status', 1)->count(),
+        'tidak_aktif' => \App\Models\Website::where('status', 0)->count(),
+    ];
+
+    return view('dashboard', compact('beritaStats', 'websiteStats'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
