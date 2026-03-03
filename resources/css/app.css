@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        scroll-behavior: smooth;
+    }
+    
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+        @apply bg-slate-50;
+    }
+    ::-webkit-scrollbar-thumb {
+        @apply bg-slate-200 rounded-full border-2 border-slate-50 border-solid hover:bg-slate-300 transition-colors;
+    }
+}
+
+.glass-nav {
+    @apply bg-white/70 backdrop-blur-xl border-b border-white/20 shadow-[0_1px_3px_rgba(0,0,0,0.02)];
+}
+
+.premium-card {
+    @apply bg-white rounded-2xl border border-slate-200/60 shadow-premium hover:shadow-premium-hover transition-all duration-300;
+}
