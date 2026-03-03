@@ -39,6 +39,9 @@ class BeritaController extends Controller
                 ->addColumn('action', function ($row) {
                     return '
                         <div class="flex items-center gap-2">
+                            <a href="' . route('beritas.show', $row->id) . '" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Lihat Detail">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </a>
                             <form action="' . route('beritas.destroy', $row->id) . '" method="POST" class="inline" onsubmit="return confirm(\'Apakah Anda yakin?\')">
                                 ' . csrf_field() . '
                                 ' . method_field('DELETE') . '
@@ -121,6 +124,15 @@ class BeritaController extends Controller
             $url = asset('storage/news/content/' . $fileName);
             return response()->json(['fileName' => $fileName, 'uploaded' => 1, 'url' => $url]);
         }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Berita $berita)
+    {
+        $berita->load('websites');
+        return view('beritas.show', compact('berita'));
     }
 
     /**

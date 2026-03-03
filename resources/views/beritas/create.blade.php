@@ -343,10 +343,10 @@
     </div>
 
     <!-- CKEditor 5 -->
-    <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
     <style>
         .ck-editor__editable {
-            min-height: 300px;
+            min-height: 200px;
         }
 
         .ck.ck-editor__main>.ck-editor__editable:not(.ck-focused) {
@@ -367,6 +367,75 @@
             // Keep editors in a non-reactive object to avoid Proxy errors
             let editors = {};
 
+            // Custom Upload Adapter for CKEditor
+            class MyUploadAdapter {
+                constructor(loader) {
+                    this.loader = loader;
+                }
+
+                upload() {
+                    return this.loader.file
+                        .then(file => new Promise((resolve, reject) => {
+                            this._initRequest();
+                            this._initListeners(resolve, reject, file);
+                            this._sendRequest(file);
+                        }));
+                }
+
+                abort() {
+                    if (this.xhr) {
+                        this.xhr.abort();
+                    }
+                }
+
+                _initRequest() {
+                    const xhr = this.xhr = new XMLHttpRequest();
+                    xhr.open('POST', "{{ route('beritas.upload_image') }}", true);
+                    xhr.setRequestHeader('X-CSRF-TOKEN', "{{ csrf_token() }}");
+                    xhr.responseType = 'json';
+                }
+
+                _initListeners(resolve, reject, file) {
+                    const xhr = this.xhr;
+                    const loader = this.loader;
+                    const genericErrorText = `Couldn't upload file: ${file.name}.`;
+
+                    xhr.addEventListener('error', () => reject(genericErrorText));
+                    xhr.addEventListener('abort', () => reject());
+                    xhr.addEventListener('load', () => {
+                        const response = xhr.response;
+                        if (!response || response.error) {
+                            return reject(response && response.error ? response.error.message :
+                                genericErrorText);
+                        }
+                        resolve({
+                            default: response.url
+                        });
+                    });
+
+                    if (xhr.upload) {
+                        xhr.upload.addEventListener('progress', evt => {
+                            if (evt.lengthComputable) {
+                                loader.uploadTotal = evt.total;
+                                loader.uploaded = evt.loaded;
+                            }
+                        });
+                    }
+                }
+
+                _sendRequest(file) {
+                    const data = new FormData();
+                    data.append('upload', file);
+                    this.xhr.send(data);
+                }
+            }
+
+            function MyCustomUploadAdapterPlugin(editor) {
+                editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+                    return new MyUploadAdapter(loader);
+                };
+            }
+
             return {
                 newsItems: (@json(old('news')) || []).map((item, index) => ({
                     id: item.id || Date.now() + index,
@@ -381,16 +450,18 @@
                 websites: @json($websites),
 
                 init() {
-                    // If no newsItems from old(), start with one
+                    // Start with one news item if empty
                     if (this.newsItems.length === 0) {
                         this.addNews();
-                    }
-
-                    this.$nextTick(() => {
-                        this.newsItems.forEach((item) => {
-                            this.initEditor(item.id);
+                    } else {
+                        // If we have items (e.g. from old()), initialize them
+                        // But wrap in $nextTick to ensure DOM is ready
+                        this.$nextTick(() => {
+                            this.newsItems.forEach((item) => {
+                                this.initEditor(item.id);
+                            });
                         });
-                    });
+                    }
                 },
 
                 addNews() {
@@ -422,37 +493,44 @@
                 },
 
                 initEditor(id) {
-                    const selector = '#konten_' + id;
-                    const editorElement = document.querySelector(selector);
-                    if (editorElement) {
-                        ClassicEditor
-                            .create(editorElement, {
-                                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList',
-                                    'blockQuote', 'insertTable', 'mediaEmbed', 'undo', 'redo'
-                                ],
-                                simpleUpload: {
-                                    uploadUrl: "{{ route('beritas.upload_image') }}",
-                                    headers: {
-                                        'X-CSRF-TOKEN': "{{ csrf_token() }}"
-                                    }
-                                }
-                            })
-                            .then(editor => {
-                                let editorKey = 'konten_' + id;
-                                editors[editorKey] = editor;
+                    // Ensure we don't initialize the same editor twice
+                    if (editors[id]) return;
 
-                                editor.model.document.on('change:data', () => {
-                                    // Find the item again as index might have changed
-                                    const item = this.newsItems.find(n => n.id === id);
-                                    if (item) {
-                                        item.konten = editor.getData();
-                                    }
-                                });
-                            })
-                            .catch(error => {
-                                console.error(error);
-                            });
+                    const editorElement = document.querySelector('#konten_' + id);
+                    if (!editorElement) return;
+
+                    // Clean up any existing editor instance on the element just in case
+                    if (editorElement.nextSibling && editorElement.nextSibling.classList && editorElement.nextSibling
+                        .classList.contains('ck-editor')) {
+                        editorElement.nextSibling.remove();
                     }
+                    ClassicEditor
+                        .create(editorElement, {
+                            toolbar: [
+                                'heading', '|',
+                                'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
+                                'imageUpload', 'blockQuote', 'insertTable', 'mediaEmbed', '|',
+                                'undo', 'redo'
+                            ],
+                            extraPlugins: [MyCustomUploadAdapterPlugin],
+                        })
+                        .then(editor => {
+                            editors[id] = editor;
+
+                            // Sync initial content
+                            this.newsItems.find(item => item.id == id).konten = editor.getData();
+
+                            editor.model.document.on('change:data', () => {
+                                const data = editor.getData();
+                                const item = this.newsItems.find(item => item.id == id);
+                                if (item) {
+                                    item.konten = data;
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error initializing editor:', error);
+                        });
                 },
 
                 handleImageUpload(event, index) {
@@ -476,7 +554,7 @@
                     const web = this.websites.find(w => w.id == id);
                     return web ? web.nama_website : '';
                 }
-            }
+            };
         }
     </script>
 </x-app-layout>
