@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Berita;
 use App\Models\Website;
+use App\Models\Berita;
+use App\Models\NewsHistory;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Storage;
@@ -107,6 +108,18 @@ class BeritaController extends Controller
             }
 
             $berita->websites()->sync($syncData);
+
+            // Log History per Website
+            foreach ($syncData as $webId => $pivotData) {
+                NewsHistory::create([
+                    'berita_id' => $berita->id,
+                    'website_id' => $webId,
+                    'user_id' => auth()->id(),
+                    'judul' => $berita->judul,
+                    'status' => $berita->status,
+                    'detail_url' => $pivotData['detail_url'],
+                ]);
+            }
         }
 
         return redirect()->route('beritas.index')->with('success', 'Berita berhasil disimpan.');

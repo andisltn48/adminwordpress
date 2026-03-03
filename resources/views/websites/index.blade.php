@@ -17,46 +17,41 @@
 
         <!-- Premium Header inside Alpine Scope -->
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-                <div>
-                    <h2 class="font-bold text-4xl text-slate-800 tracking-tight">
-                        {{ __('Websites') }}
-                    </h2>
-                    <p class="mt-2 text-slate-500">
-                        {{ __('Kelola informasi dan status website WordPress Anda secara terpusat.') }}
-                    </p>
-                </div>
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <div class="relative flex-1 md:flex-initial">
+            <div class="flex items-center justify-between gap-4">
+                <h2 class="font-bold text-2xl text-slate-800 leading-tight flex items-center gap-3">
+                    <div class="p-2 bg-indigo-100 rounded-xl">
+                        <svg class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9h18" />
+                        </svg>
+                    </div>
+                    {{ __('Websites') }}
+                </h2>
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 outline-none focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all">
+                        <span
+                            class="text-xs font-bold text-slate-400 uppercase tracking-wider">{{ __('Filter Status:') }}</span>
                         <select id="status-filter"
-                            class="w-full px-4 py-3 bg-white border-slate-200 text-slate-600 font-semibold rounded-2xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none appearance-none pr-10">
+                            class="text-sm font-bold text-slate-700 bg-transparent border-none p-0 focus:ring-0 cursor-pointer min-w-[120px]">
                             <option value="">{{ __('Semua Status') }}</option>
                             <option value="1">{{ __('Aktif') }}</option>
-                            <option value="0">{{ __('Non-aktif') }}</option>
+                            <option value="0">{{ __('Tidak Aktif') }}</option>
                         </select>
-                        <div
-                            class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-400">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </div>
                     </div>
                     <div class="flex items-center gap-2">
                         <button
                             onclick="window.location.href='{{ route('websites.export') }}?status=' + $('#status-filter').val()"
-                            class="inline-flex items-center px-6 py-3 bg-emerald-600 border border-transparent rounded-2xl font-bold text-sm text-white hover:bg-emerald-700 active:scale-95 transition-all duration-300 shadow-xl shadow-emerald-500/25 whitespace-nowrap">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round"
+                            class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-lg shadow-emerald-200 gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             {{ __('Export Excel') }}
                         </button>
                         <button @click="openModal = true"
-                            class="inline-flex items-center px-6 py-3 bg-primary-600 border border-transparent rounded-2xl font-bold text-sm text-white hover:bg-primary-700 active:scale-95 transition-all duration-300 shadow-xl shadow-primary-500/25 whitespace-nowrap">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-lg shadow-indigo-200 gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                             </svg>
                             {{ __('Tambah Website') }}

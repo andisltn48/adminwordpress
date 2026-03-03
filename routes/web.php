@@ -31,6 +31,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/websites/export', [WebsiteController::class, 'export'])->name('websites.export');
+    Route::get('/histories/export', [\App\Http\Controllers\NewsHistoryController::class, 'export'])->name('histories.export');
+    Route::get('/histories', [\App\Http\Controllers\NewsHistoryController::class, 'index'])->name('histories.index');
     Route::resource('websites', WebsiteController::class);
     Route::resource('beritas', BeritaController::class);
     Route::post('beritas/upload-image', [BeritaController::class, 'uploadImage'])->name('beritas.upload_image');

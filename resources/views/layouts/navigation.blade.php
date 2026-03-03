@@ -25,6 +25,10 @@
                         class="text-slate-600 hover:text-primary-600 transition-colors">
                         {{ __('Berita') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('histories.index')" :active="request()->routeIs('histories.*')"
+                        class="text-slate-600 hover:text-primary-600 transition-colors">
+                        {{ __('Riwayat') }}
+                    </x-nav-link>
                 </div>
             </div>
 
