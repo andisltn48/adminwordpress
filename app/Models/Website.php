@@ -23,7 +23,7 @@ class Website extends Model
     public function beritas()
     {
         return $this->belongsToMany(Berita::class, 'berita_website')
-            ->withPivot('detail_url')
+            ->withPivot('website_url', 'detail_url')
             ->withTimestamps();
     }
 }

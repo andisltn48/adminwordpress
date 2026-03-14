@@ -103,7 +103,8 @@ class BeritaController extends Controller
             foreach ($newsItem['website_ids'] as $webId) {
                 $website = Website::findOrFail($webId);
                 $syncData[$webId] = [
-                    'detail_url' => rtrim($website->url, '/') . '/detail_berita/' . $berita->id
+                    'website_url' => $website->url,
+                    'detail_url' => '/detail_berita/' . $berita->id
                 ];
             }
 

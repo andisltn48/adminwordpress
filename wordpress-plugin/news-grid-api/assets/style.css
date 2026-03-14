@@ -1,0 +1,250 @@
+/* ============================================================
+   NEWS GRID API - Plugin Styles
+   ============================================================ */
+
+/* ---------- GRID LAYOUT ---------- */
+.ngapi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    padding: 24px 0;
+}
+
+@media (max-width: 960px) {
+    .ngapi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .ngapi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- CARD ---------- */
+.ngapi-card {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 16px rgba(0,0,0,.04);
+    transition: transform 0.35s cubic-bezier(.22,1,.36,1),
+                box-shadow 0.35s cubic-bezier(.22,1,.36,1);
+}
+
+.ngapi-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 4px 12px rgba(0,0,0,.08), 0 16px 40px rgba(0,0,0,.08);
+}
+
+/* ---------- CARD IMAGE ---------- */
+.ngapi-card-img {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 */
+    overflow: hidden;
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+}
+
+.ngapi-card-img img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(.22,1,.36,1);
+}
+
+.ngapi-card:hover .ngapi-card-img img {
+    transform: scale(1.08);
+}
+
+.ngapi-card-img--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+}
+
+.ngapi-card-img--placeholder svg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* ---------- CARD BODY ---------- */
+.ngapi-card-body {
+    padding: 16px 20px 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.ngapi-card-title {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: #1e293b;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ngapi-card-excerpt {
+    margin: 0 0 12px;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: #64748b;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ngapi-card-meta {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.ngapi-card-meta svg {
+    flex-shrink: 0;
+}
+
+/* ---------- EMPTY STATE ---------- */
+.ngapi-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: #94a3b8;
+}
+
+.ngapi-empty svg {
+    margin-bottom: 12px;
+}
+
+.ngapi-empty p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* ============================================================
+   DETAIL PAGE
+   ============================================================ */
+
+.ngapi-detail {
+    max-width: 760px;
+    margin: 32px auto;
+    padding: 0 20px;
+}
+
+/* ---------- BACK LINK ---------- */
+.ngapi-detail-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #3b82f6;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.ngapi-detail-back:hover {
+    color: #2563eb;
+}
+
+/* ---------- HEADER ---------- */
+.ngapi-detail-header {
+    margin-bottom: 28px;
+}
+
+.ngapi-detail-title {
+    margin: 0 0 14px;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.3;
+    color: #0f172a;
+}
+
+.ngapi-detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+/* ---------- HERO IMAGE ---------- */
+.ngapi-detail-hero {
+    margin-bottom: 32px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+
+.ngapi-detail-hero img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* ---------- CONTENT ---------- */
+.ngapi-detail-content {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #334155;
+}
+
+.ngapi-detail-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.ngapi-detail-content h2,
+.ngapi-detail-content h3,
+.ngapi-detail-content h4 {
+    color: #1e293b;
+    margin-top: 28px;
+}
+
+.ngapi-detail-content p {
+    margin-bottom: 16px;
+}
+
+.ngapi-detail-content a {
+    color: #3b82f6;
+    text-decoration: underline;
+}
+
+.ngapi-detail-content blockquote {
+    border-left: 4px solid #3b82f6;
+    padding: 12px 20px;
+    margin: 20px 0;
+    background: #f1f5f9;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: #475569;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 600px) {
+    .ngapi-detail-title {
+        font-size: 1.5rem;
+    }
+    .ngapi-detail-content {
+        font-size: 0.95rem;
+    }
+}

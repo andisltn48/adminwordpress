@@ -19,7 +19,7 @@ class Berita extends Model
     public function websites()
     {
         return $this->belongsToMany(Website::class, 'berita_website')
-            ->withPivot('detail_url')
+            ->withPivot('website_url', 'detail_url')
             ->withTimestamps();
     }
 }

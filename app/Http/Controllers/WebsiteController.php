@@ -121,6 +121,14 @@ class WebsiteController extends Controller
             'status' => $request->boolean('status'),
         ]);
 
+        // Update pivot data for all related news
+        $website->beritas()->each(function ($berita) use ($website) {
+            $berita->pivot->update([
+                'website_url' => $website->url,
+                'detail_url' => '/detail_berita/' . $berita->id
+            ]);
+        });
+
         return redirect()->route('websites.index')->with('success', 'Website berhasil diperbarui.');
     }
 

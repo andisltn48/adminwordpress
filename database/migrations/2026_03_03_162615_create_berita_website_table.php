@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('berita_id')->constrained('beritas')->onDelete('cascade');
             $table->foreignId('website_id')->constrained('websites')->onDelete('cascade');
+            $table->string('website_url')->nullable();
             $table->string('detail_url')->nullable();
             $table->timestamps();
         });

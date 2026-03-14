@@ -38,4 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::post('beritas/upload-image', [BeritaController::class, 'uploadImage'])->name('beritas.upload_image');
 });
 
+Route::get('/api/berita', [\App\Http\Controllers\Api\BeritaApiController::class, 'getDetail']);
+Route::get('/api/berita/{id}', [\App\Http\Controllers\Api\BeritaApiController::class, 'getDetailById']);
+
 require __DIR__ . '/auth.php';

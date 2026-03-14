@@ -15,9 +15,6 @@ return new class extends Migration {
             $table->string('judul');
             $table->longText('konten');
             $table->string('featured_image')->nullable();
-            $table->foreignId('website_id')->constrained('websites')->onDelete('cascade');
-            $table->string('website_url');
-            $table->string('detail_url')->nullable();
             $table->string('status')->default('Draft');
             $table->timestamps();
         });
