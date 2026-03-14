@@ -71,6 +71,10 @@ function news_grid_api_enqueue_assets() {
 function news_grid_api_fetch_list($limit = 10) {
     $home_url = home_url();
     $cache_key = 'news_grid_api_list_' . md5($home_url . '_' . $limit);
+
+    // HAPUS CACHE LAMA (hapus baris ini setelah berhasil)
+    delete_transient($cache_key);
+
     $cached = get_transient($cache_key);
 
     if ($cached !== false) {
@@ -81,8 +85,7 @@ function news_grid_api_fetch_list($limit = 10) {
         'url'   => $home_url,
         'limit' => $limit,
     ]);
-// HAPUS CACHE LAMA (hapus baris ini setelah berhasil)
-    delete_transient($cache_key);
+
     $response = wp_remote_get($api_url, ['timeout' => 15]);
 
     if (is_wp_error($response)) {
