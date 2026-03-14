@@ -104,7 +104,7 @@ class BeritaController extends Controller
                 $website = Website::findOrFail($webId);
                 $syncData[$webId] = [
                     'website_url' => $website->url,
-                    'detail_url' => '/detail_berita/' . $berita->id
+                    'detail_url' => '/detail_berita/' . $berita->id,
                 ];
             }
 
@@ -118,7 +118,7 @@ class BeritaController extends Controller
                     'user_id' => auth()->id(),
                     'judul' => $berita->judul,
                     'status' => $berita->status,
-                    'detail_url' => $pivotData['detail_url'],
+                    'detail_url' => $pivotData['website_url'] . $pivotData['detail_url'],
                 ]);
             }
         }

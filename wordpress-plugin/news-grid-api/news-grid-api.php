@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 // ============================================================
 // KONFIGURASI
 // ============================================================
-define('NEWS_GRID_API_BASE_URL', 'http://localhost:8000');
+define('NEWS_GRID_API_BASE_URL', 'https://aquamarine-gnat-818015.hostingersite.com');
 
 // ============================================================
 // HOOKS
@@ -81,7 +81,8 @@ function news_grid_api_fetch_list($limit = 10) {
         'url'   => $home_url,
         'limit' => $limit,
     ]);
-
+// HAPUS CACHE LAMA (hapus baris ini setelah berhasil)
+    delete_transient($cache_key);
     $response = wp_remote_get($api_url, ['timeout' => 15]);
 
     if (is_wp_error($response)) {
@@ -201,60 +202,9 @@ function news_grid_api_template($template) {
         return get_404_template();
     }
 
-    // Override judul halaman
-    add_filter('document_title_parts', function($title) use ($news) {
-        $title['title'] = $news['judul'];
-        return $title;
-    });
+    // Simpan data berita di global agar bisa diakses template
+    $GLOBALS['ngapi_current_news'] = $news;
 
-    // Render halaman detail langsung
-    add_filter('the_content', function() use ($news) {
-        return news_grid_api_render_detail($news);
-    });
-
-    // Coba gunakan page.php, singular.php, atau index.php
-    $templates = ['page.php', 'singular.php', 'index.php'];
-    foreach ($templates as $tpl) {
-        $found = locate_template($tpl);
-        if ($found) {
-            return $found;
-        }
-    }
-
-    return $template;
-}
-
-function news_grid_api_render_detail($news) {
-    $date_str = date_i18n('d F Y, H:i', strtotime($news['created_at']));
-
-    $img_html = '';
-    if (!empty($news['featured_image'])) {
-        $img_html = '<div class="ngapi-detail-hero">
-            <img src="' . esc_url($news['featured_image']) . '" alt="' . esc_attr($news['judul']) . '">
-        </div>';
-    }
-
-    $back_url = home_url('/');
-
-    return '
-    <article class="ngapi-detail">
-        <a href="' . esc_url($back_url) . '" class="ngapi-detail-back">
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Kembali ke Beranda
-        </a>
-
-        <header class="ngapi-detail-header">
-            <h1 class="ngapi-detail-title">' . esc_html($news['judul']) . '</h1>
-            <div class="ngapi-detail-meta">
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <span>' . esc_html($date_str) . '</span>
-            </div>
-        </header>
-
-        ' . $img_html . '
-
-        <div class="ngapi-detail-content">
-            ' . wp_kses_post($news['konten']) . '
-        </div>
-    </article>';
+    // Gunakan template standalone (tanpa header/sidebar/footer WordPress)
+    return plugin_dir_path(__FILE__) . 'templates/detail-news.php';
 }

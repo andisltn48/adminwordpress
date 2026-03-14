@@ -141,10 +141,21 @@
    DETAIL PAGE
    ============================================================ */
 
-.ngapi-detail {
-    max-width: 760px;
+/* ---------- LAYOUT (2-kolom: konten + sidebar) ---------- */
+.ngapi-detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 40px;
+    max-width: 1100px;
     margin: 32px auto;
     padding: 0 20px;
+    align-items: start;
+}
+
+.ngapi-detail {
+    max-width: none;
+    margin: 0;
+    padding: 0;
 }
 
 /* ---------- BACK LINK ---------- */
@@ -239,7 +250,101 @@
     color: #475569;
 }
 
+/* ============================================================
+   SIDEBAR: BERITA LAINNYA
+   ============================================================ */
+
+.ngapi-sidebar {
+    position: sticky;
+    top: 32px;
+}
+
+.ngapi-sidebar-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.ngapi-sidebar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ngapi-sidebar-item {
+    display: flex;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+    padding: 10px;
+    border-radius: 12px;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.ngapi-sidebar-item:hover {
+    background: #ffffff;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+
+.ngapi-sidebar-item-img {
+    flex-shrink: 0;
+    width: 72px;
+    height: 54px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+}
+
+.ngapi-sidebar-item-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ngapi-sidebar-item-img--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+}
+
+.ngapi-sidebar-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.ngapi-sidebar-item-title {
+    margin: 0 0 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #1e293b;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ngapi-sidebar-item-date {
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
 /* ---------- RESPONSIVE ---------- */
+@media (max-width: 860px) {
+    .ngapi-detail-layout {
+        grid-template-columns: 1fr;
+    }
+    .ngapi-sidebar {
+        position: static;
+        border-top: 2px solid #e2e8f0;
+        padding-top: 28px;
+    }
+}
+
 @media (max-width: 600px) {
     .ngapi-detail-title {
         font-size: 1.5rem;
