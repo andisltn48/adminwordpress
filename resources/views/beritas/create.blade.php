@@ -189,15 +189,9 @@
 
                                     <div>
                                         <x-input-label :value="__('Kategori')" class="text-slate-700 font-bold mb-2 ml-1" />
-                                        <select :name="'news[' + index + '][kategori]'" x-model="item.kategori"
-                                            class="block w-full border-slate-200 focus:border-primary-500 focus:ring-primary-500 rounded-2xl shadow-sm transition-all duration-300 py-3 px-4 text-sm">
-                                            <option value="">-- Pilih Kategori --</option>
-                                            <option value="Pengumuman">Pengumuman</option>
-                                            <option value="Berita">Berita</option>
-                                            <option value="Artikel">Artikel</option>
-                                            <option value="Kegiatan">Kegiatan</option>
-                                            <option value="Press Release">Press Release</option>
-                                        </select>
+                                        <input type="text" :name="'news[' + index + '][kategori]'" x-model="item.kategori"
+                                            class="block w-full border-slate-200 focus:border-primary-500 focus:ring-primary-500 rounded-2xl shadow-sm transition-all duration-300 py-3 px-4 text-sm"
+                                            placeholder="Contoh: Berita, Pengumuman, Artikel..." />
                                     </div>
 
                                     <div>

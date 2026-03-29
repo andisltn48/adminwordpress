@@ -87,8 +87,6 @@
                                     <th>#</th>
                                     <th>{{ __('Gambar') }}</th>
                                     <th>{{ __('Judul Berita') }}</th>
-                                    <th>{{ __('Kategori') }}</th>
-                                    <th>{{ __('Tgl Publikasi') }}</th>
                                     <th>{{ __('Website Target') }}</th>
                                     <th>{{ __('Status') }}</th>
                                     <th class="text-right">{{ __('Aksi') }}</th>
@@ -131,16 +129,6 @@
                         data: 'judul',
                         name: 'judul',
                         className: 'font-semibold text-slate-800'
-                    },
-                    {
-                        data: 'kategori',
-                        name: 'kategori',
-                        width: '10%'
-                    },
-                    {
-                        data: 'tanggal_publikasi',
-                        name: 'tanggal_publikasi',
-                        width: '12%'
                     },
                     {
                         data: 'target_websites',
