@@ -14,6 +14,12 @@ class Berita extends Model
         'konten',
         'featured_image',
         'status',
+        'tanggal_publikasi',
+        'kategori',
+    ];
+
+    protected $casts = [
+        'tanggal_publikasi' => 'date',
     ];
 
     public function websites()

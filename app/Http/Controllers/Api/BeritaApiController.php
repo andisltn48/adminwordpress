@@ -46,6 +46,8 @@ class BeritaApiController extends Controller
                 'judul' => $berita->judul,
                 'konten' => $berita->konten,
                 'featured_image' => $berita->featured_image ? asset('storage/' . $berita->featured_image) : null,
+                'kategori' => $berita->kategori,
+                'tanggal_publikasi' => $berita->tanggal_publikasi ? $berita->tanggal_publikasi->format('Y-m-d') : null,
                 'detail_url' => url('/') . $berita->pivot->detail_url,
                 'created_at' => $berita->created_at->format('Y-m-d H:i:s'),
             ];
@@ -77,6 +79,8 @@ class BeritaApiController extends Controller
             'konten' => $berita->konten,
             'featured_image' => $berita->featured_image ? asset('storage/' . $berita->featured_image) : null,
             'status' => $berita->status,
+            'kategori' => $berita->kategori,
+            'tanggal_publikasi' => $berita->tanggal_publikasi ? $berita->tanggal_publikasi->format('Y-m-d') : null,
             'created_at' => $berita->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $berita->updated_at->format('Y-m-d H:i:s'),
             'websites' => $berita->websites->map(function ($web) {

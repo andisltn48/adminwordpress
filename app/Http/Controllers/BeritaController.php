@@ -35,6 +35,18 @@ class BeritaController extends Controller
                     }
                     return '<span class="text-slate-400 text-xs">-</span>';
                 })
+                ->editColumn('kategori', function ($row) {
+                    if ($row->kategori) {
+                        return '<span class="px-3 py-1 text-xs font-bold rounded-full bg-violet-100 text-violet-700">' . $row->kategori . '</span>';
+                    }
+                    return '<span class="text-slate-400 text-xs">-</span>';
+                })
+                ->editColumn('tanggal_publikasi', function ($row) {
+                    if ($row->tanggal_publikasi) {
+                        return '<span class="text-sm text-slate-700 font-medium">' . $row->tanggal_publikasi->format('d M Y') . '</span>';
+                    }
+                    return '<span class="text-slate-400 text-xs">-</span>';
+                })
                 ->addColumn('target_websites', function ($row) {
                     $badges = $row->websites->map(function ($web) {
                         return '<span class="inline-block px-2 py-0.5 bg-primary-50 text-primary-700 text-[10px] font-bold rounded-md border border-primary-100 mb-1 mr-1">' . $web->nama_website . '</span>';
@@ -56,7 +68,7 @@ class BeritaController extends Controller
                             </form>
                         </div>';
                 })
-                ->rawColumns(['status', 'featured_image', 'target_websites', 'action'])
+                ->rawColumns(['status', 'featured_image', 'kategori', 'tanggal_publikasi', 'target_websites', 'action'])
                 ->make(true);
         }
 
@@ -84,6 +96,8 @@ class BeritaController extends Controller
             'news.*.featured_image' => 'nullable|image|max:2048',
             'news.*.website_ids' => 'required|array|min:1',
             'news.*.status' => 'required|in:Draft,Published',
+            'news.*.tanggal_publikasi' => 'nullable|date',
+            'news.*.kategori' => 'nullable|string|max:255',
         ]);
 
         foreach ($request->news as $newsItem) {
@@ -97,6 +111,8 @@ class BeritaController extends Controller
                 'konten' => $newsItem['konten'],
                 'featured_image' => $imagePath,
                 'status' => $newsItem['status'],
+                'tanggal_publikasi' => $newsItem['tanggal_publikasi'] ?? null,
+                'kategori' => $newsItem['kategori'] ?? null,
             ]);
 
             $syncData = [];

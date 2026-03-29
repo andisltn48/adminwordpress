@@ -116,6 +116,23 @@
                     <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl shadow-slate-200">
                         <div class="space-y-4">
                             <div>
+                                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest">Kategori</span>
+                                <p class="text-sm font-medium mt-1">
+                                    @if($berita->kategori)
+                                        <span class="px-3 py-1 bg-violet-500/20 text-violet-300 text-xs font-bold rounded-full">{{ $berita->kategori }}</span>
+                                    @else
+                                        <span class="text-slate-500 italic">Belum ada kategori</span>
+                                    @endif
+                                </p>
+                            </div>
+                            <div>
+                                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest">Tanggal
+                                    Publikasi</span>
+                                <p class="text-sm font-medium mt-1">
+                                    {{ $berita->tanggal_publikasi ? $berita->tanggal_publikasi->format('d M Y') : '-' }}
+                                </p>
+                            </div>
+                            <div>
                                 <span class="text-xs text-slate-400 font-bold uppercase tracking-widest">Dibuat
                                     Pada</span>
                                 <p class="text-sm font-medium mt-1">{{ $berita->created_at->format('d M Y, H:i') }}</p>

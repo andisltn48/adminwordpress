@@ -188,6 +188,25 @@
                                     </div>
 
                                     <div>
+                                        <x-input-label :value="__('Kategori')" class="text-slate-700 font-bold mb-2 ml-1" />
+                                        <select :name="'news[' + index + '][kategori]'" x-model="item.kategori"
+                                            class="block w-full border-slate-200 focus:border-primary-500 focus:ring-primary-500 rounded-2xl shadow-sm transition-all duration-300 py-3 px-4 text-sm">
+                                            <option value="">-- Pilih Kategori --</option>
+                                            <option value="Pengumuman">Pengumuman</option>
+                                            <option value="Berita">Berita</option>
+                                            <option value="Artikel">Artikel</option>
+                                            <option value="Kegiatan">Kegiatan</option>
+                                            <option value="Press Release">Press Release</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <x-input-label :value="__('Tanggal Publikasi')" class="text-slate-700 font-bold mb-2 ml-1" />
+                                        <input type="date" :name="'news[' + index + '][tanggal_publikasi]'" x-model="item.tanggal_publikasi"
+                                            class="block w-full border-slate-200 focus:border-primary-500 focus:ring-primary-500 rounded-2xl shadow-sm transition-all duration-300 py-3 px-4 text-sm" />
+                                    </div>
+
+                                    <div>
                                         <x-input-label :value="__('Status')" class="text-slate-700 font-bold mb-2 ml-1" />
                                         <div class="flex gap-2 p-1 bg-slate-100 rounded-2xl w-full">
                                             <button type="button" @click="item.status = 'Draft'"
@@ -443,6 +462,8 @@
                     konten: item.konten || '',
                     website_ids: item.website_ids || [],
                     status: item.status || 'Published',
+                    kategori: item.kategori || '',
+                    tanggal_publikasi: item.tanggal_publikasi || '',
                     imagePreview: null // Browser security prevents re-loading local file paths
                 })),
                 showPreview: false,
@@ -472,6 +493,8 @@
                         konten: '',
                         website_ids: [],
                         status: 'Published',
+                        kategori: '',
+                        tanggal_publikasi: '',
                         imagePreview: null
                     });
                     this.$nextTick(() => {

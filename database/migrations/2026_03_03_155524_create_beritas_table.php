@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->longText('konten');
             $table->string('featured_image')->nullable();
             $table->string('status')->default('Draft');
+            $table->date('tanggal_publikasi')->nullable();
+            $table->string('kategori')->nullable();
             $table->timestamps();
         });
     }

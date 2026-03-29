@@ -52,8 +52,19 @@ $other_news = array_filter($other_news, function($item) use ($news) {
             <header class="ngapi-detail-header">
                 <h1 class="ngapi-detail-title"><?php echo esc_html($news['judul']); ?></h1>
                 <div class="ngapi-detail-meta">
+                    <?php if (!empty($news['kategori'])): ?>
+                    <span style="display:inline-block; background:#ede9fe; color:#6d28d9; padding:2px 10px; border-radius:999px; font-size:0.75rem; font-weight:700; margin-right:8px;">
+                        <?php echo esc_html($news['kategori']); ?>
+                    </span>
+                    <?php endif; ?>
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <span><?php echo esc_html($date_str); ?></span>
+                    <span><?php
+                        if (!empty($news['tanggal_publikasi'])) {
+                            echo esc_html(date_i18n('d F Y', strtotime($news['tanggal_publikasi'])));
+                        } else {
+                            echo esc_html($date_str);
+                        }
+                    ?></span>
                 </div>
             </header>
 
