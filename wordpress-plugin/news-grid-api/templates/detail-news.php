@@ -53,7 +53,7 @@ $other_news = array_filter($other_news, function($item) use ($news) {
                 <h1 class="ngapi-detail-title"><?php echo esc_html($news['judul']); ?></h1>
                 <div class="ngapi-detail-meta">
                     <?php if (!empty($news['kategori'])): ?>
-                    <span style="display:inline-block; background:#ede9fe; color:#6d28d9; padding:2px 10px; border-radius:999px; font-size:0.75rem; font-weight:700; margin-right:8px;">
+                    <span class="ngapi-card-badge">
                         <?php echo esc_html($news['kategori']); ?>
                     </span>
                     <?php endif; ?>
@@ -86,7 +86,9 @@ $other_news = array_filter($other_news, function($item) use ($news) {
                 <?php if (!empty($other_news)): ?>
                     <?php foreach ($other_news as $item):
                         $item_url = home_url('/detail_berita/' . $item['id'] . '/');
-                        $item_date = date_i18n('d M Y', strtotime($item['created_at']));
+                        $item_date = !empty($item['tanggal_publikasi'])
+                            ? date_i18n('d M Y', strtotime($item['tanggal_publikasi']))
+                            : date_i18n('d M Y', strtotime($item['created_at']));
                         $item_img = !empty($item['featured_image']) ? $item['featured_image'] : '';
                     ?>
                     <a href="<?php echo esc_url($item_url); ?>" class="ngapi-sidebar-item">

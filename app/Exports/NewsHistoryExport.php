@@ -12,9 +12,28 @@ class NewsHistoryExport implements FromQuery, WithHeadings, WithMapping
 {
     use Exportable;
 
+    protected $startDate;
+    protected $endDate;
+
+    public function __construct($startDate = null, $endDate = null)
+    {
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
+    }
+
     public function query()
     {
-        return NewsHistory::with(['website', 'user'])->latest();
+        $query = NewsHistory::with(['website', 'user'])->latest();
+
+        if ($this->startDate) {
+            $query->whereDate('created_at', '>=', $this->startDate);
+        }
+
+        if ($this->endDate) {
+            $query->whereDate('created_at', '<=', $this->endDate);
+        }
+
+        return $query;
     }
 
     public function headings(): array

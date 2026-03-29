@@ -10,21 +10,68 @@
                 </div>
                 {{ __('Riwayat Pembuatan Berita') }}
             </h2>
-            <div class="flex items-center gap-4">
-                <a href="{{ route('histories.export') }}"
-                    class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-lg shadow-emerald-200 gap-2">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    {{ __('Export Excel') }}
-                </a>
-            </div>
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-12" x-data="{
+        startDate: '{{ request('start_date', '') }}',
+        endDate: '{{ request('end_date', '') }}',
+        get exportUrl() {
+            let url = '{{ route('histories.export') }}';
+            let params = [];
+            if (this.startDate) params.push('start_date=' + this.startDate);
+            if (this.endDate) params.push('end_date=' + this.endDate);
+            return params.length ? url + '?' + params.join('&') : url;
+        }
+    }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            {{-- Filter Bar --}}
+            <div class="premium-card mb-6">
+                <div class="p-6">
+                    <form method="GET" action="{{ route('histories.index') }}" class="flex flex-wrap items-end gap-4">
+                        <div class="flex-1 min-w-[180px]">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{{ __('Dari Tanggal') }}</label>
+                            <input type="date" name="start_date" x-model="startDate"
+                                value="{{ request('start_date') }}"
+                                class="block w-full border-slate-200 focus:border-primary-500 focus:ring-primary-500 rounded-xl shadow-sm transition-all duration-300 py-2.5 px-4 text-sm" />
+                        </div>
+                        <div class="flex-1 min-w-[180px]">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{{ __('Sampai Tanggal') }}</label>
+                            <input type="date" name="end_date" x-model="endDate"
+                                value="{{ request('end_date') }}"
+                                class="block w-full border-slate-200 focus:border-primary-500 focus:ring-primary-500 rounded-xl shadow-sm transition-all duration-300 py-2.5 px-4 text-sm" />
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="submit"
+                                class="inline-flex items-center px-5 py-2.5 bg-primary-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-primary-700 active:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-lg shadow-primary-200 gap-2">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                </svg>
+                                {{ __('Filter') }}
+                            </button>
+                            @if(request('start_date') || request('end_date'))
+                                <a href="{{ route('histories.index') }}"
+                                    class="inline-flex items-center px-5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-xs text-slate-600 uppercase tracking-widest hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm gap-2">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    {{ __('Reset') }}
+                                </a>
+                            @endif
+                            <a :href="exportUrl"
+                                class="inline-flex items-center px-5 py-2.5 bg-emerald-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-lg shadow-emerald-200 gap-2">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                {{ __('Export Excel') }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="premium-card overflow-hidden">
                 <div class="p-8">
                     <div class="table-responsive">

@@ -151,7 +151,10 @@ function news_grid_api_render($atts) {
     foreach ($news_list as $news) {
         $detail_url = home_url('/detail_berita/' . $news['id'] . '/');
         $img_url    = !empty($news['featured_image']) ? $news['featured_image'] : '';
-        $date_str   = date_i18n('d M Y', strtotime($news['created_at']));
+        $date_str   = !empty($news['tanggal_publikasi'])
+            ? date_i18n('d M Y', strtotime($news['tanggal_publikasi']))
+            : date_i18n('d M Y', strtotime($news['created_at']));
+        $kategori   = !empty($news['kategori']) ? $news['kategori'] : '';
         // Ambil excerpt dari konten (strip HTML, potong 120 karakter)
         $excerpt    = wp_trim_words(wp_strip_all_tags($news['konten']), 18, '…');
 
@@ -166,10 +169,16 @@ function news_grid_api_render($atts) {
             </div>';
         }
 
+        $kategori_html = '';
+        if ($kategori) {
+            $kategori_html = '<span class="ngapi-card-badge">' . esc_html($kategori) . '</span>';
+        }
+
         $output .= '
         <a href="' . esc_url($detail_url) . '" class="ngapi-card">
             ' . $img_html . '
             <div class="ngapi-card-body">
+                ' . $kategori_html . '
                 <h3 class="ngapi-card-title">' . esc_html($news['judul']) . '</h3>
                 <p class="ngapi-card-excerpt">' . esc_html($excerpt) . '</p>
                 <div class="ngapi-card-meta">

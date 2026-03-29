@@ -108,6 +108,19 @@
     overflow: hidden;
 }
 
+.ngapi-card-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    margin-bottom: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6d28d9;
+    background: #ede9fe;
+    border-radius: 999px;
+}
+
 .ngapi-card-meta {
     margin-top: auto;
     display: flex;
