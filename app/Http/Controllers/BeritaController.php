@@ -97,7 +97,7 @@ class BeritaController extends Controller
             'news.*.website_ids' => 'required|array|min:1',
             'news.*.status' => 'required|in:Draft,Published',
             'news.*.tanggal_publikasi' => 'nullable|date',
-            'news.*.kategori' => 'nullable|string|max:255',
+            'news.*.kategori' => 'required|nullable|string|max:255',
         ]);
 
         foreach ($request->news as $newsItem) {

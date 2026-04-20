@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('url');
             $table->boolean('status')->default(true); // true = active, false = inactive
             $table->timestamps();
+
+            $table->string('username');
+
+            $table->string('password');
         });
     }
 

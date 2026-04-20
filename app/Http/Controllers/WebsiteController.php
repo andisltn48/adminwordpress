@@ -6,6 +6,8 @@ use App\Models\Website;
 use Illuminate\Http\Request;
 use App\Exports\WebsitesExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Route;
 
 class WebsiteController extends Controller
 {
@@ -41,6 +43,8 @@ class WebsiteController extends Controller
                             'id' => $row->id,
                             'nama_website' => $row->nama_website,
                             'url' => $row->url,
+                            'username' => $row->username,
+                            'password' => $row->password,
                             'status' => (bool) $row->status,
                             'updateUrl' => route('websites.update', $row->id)
                         ])) . ')" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Edit">
@@ -78,11 +82,29 @@ class WebsiteController extends Controller
         $request->validate([
             'nama_website' => 'required|string|max:255',
             'url' => 'required|url|max:255',
+            'username' => 'required|string|max:255',
+            'password' => 'required|string|max:255',
         ]);
 
+        try {
+            $testUrl = $request->url.'/wp-json/wp/v2/users/me';
+            $response = Http::withBasicAuth($request->username, $request->password)
+                ->timeout(10) // Maksimal tunggu 10 detik
+                ->get($testUrl);
+
+            if ($response->successful()) {
+                $data = $response->json();
+            } else {
+                return redirect()->route('websites.index')->with('error', 'URL atau Password salah');
+            }
+        } catch (\Exception $e) {
+            return redirect()->route('websites.index')->with('error', $e->getMessage());
+        }
         Website::create([
             'nama_website' => $request->nama_website,
             'url' => $request->url,
+            'username' => $request->username,
+            'password' => $request->password,
             'status' => $request->boolean('status'),
         ]);
 
@@ -113,11 +135,36 @@ class WebsiteController extends Controller
         $request->validate([
             'nama_website' => 'required|string|max:255',
             'url' => 'required|url|max:255',
+            'username' => 'required|string|max:255',
+            'password' => 'required|string|max:255',
         ]);
+
+        try {
+            $url = $request->url."/wp-json/wp/v2/users/me";
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+                'Accept' => 'application/json',
+            ])
+            // Kita tetap kirim Auth Header, tapi kita tambah parameter di bawah
+            ->withBasicAuth($request->username, $request->password) 
+            ->withoutVerifying()
+            ->get($url, [
+                'rest_route' => '/wp/v2/users/me', // Pakai rest_route untuk bypass rewrite
+            ]);
+            if ($response->successful()) {
+                $data = $response->json();
+            } else {
+                return redirect()->route('websites.index')->with('error', 'URL atau Password salah');
+            }
+        } catch (\Exception $e) {
+            return redirect()->route('websites.index')->with('error', $e->getMessage());
+        }
 
         $website->update([
             'nama_website' => $request->nama_website,
             'url' => $request->url,
+            'username' => $request->username,
+            'password' => $request->password,
             'status' => $request->boolean('status'),
         ]);
 

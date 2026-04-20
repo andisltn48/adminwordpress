@@ -14,6 +14,8 @@ class Website extends Model
         'nama_website',
         'url',
         'status',
+        'username',
+        'password'
     ];
 
     protected $casts = [

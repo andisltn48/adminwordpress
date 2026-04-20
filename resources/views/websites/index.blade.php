@@ -6,6 +6,8 @@
             id: '',
             nama_website: '',
             url: '',
+            username: '',
+            password: '',
             status: true,
             updateUrl: ''
         },
@@ -63,26 +65,6 @@
 
         <div>
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-
-                @if (session('success'))
-                    <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 3000)"
-                        class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-xl shadow-sm">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-semibold text-green-700">
-                                    {{ session('success') }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                @endif
 
                 <div class="premium-card overflow-hidden">
                     <div class="p-6">
@@ -159,6 +141,22 @@
                             <x-text-input id="url" name="url" type="url" class="block w-full mt-1"
                                 :value="old('url')" required placeholder="https://example.com" />
                             <x-input-error class="mt-2" :messages="$errors->get('url')" />
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <x-input-label for="username" :value="__('Username WP')" />
+                                <x-text-input id="username" name="username" type="text" class="block w-full mt-1"
+                                    :value="old('username')" required placeholder="admin" />
+                                <x-input-error class="mt-2" :messages="$errors->get('username')" />
+                            </div>
+
+                            <div>
+                                <x-input-label for="password" :value="__('Password WP')" />
+                                <x-text-input id="password" name="password" type="text" class="block w-full mt-1"
+                                    :value="old('password')" required placeholder="password" />
+                                <x-input-error class="mt-2" :messages="$errors->get('password')" />
+                            </div>
                         </div>
 
                         <div class="flex items-center gap-2 py-2">
@@ -244,6 +242,22 @@
                             <x-text-input id="edit_url" name="url" type="url" class="block w-full mt-1"
                                 x-model="editData.url" required />
                             <x-input-error class="mt-2" :messages="$errors->get('url')" />
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <x-input-label for="edit_username" :value="__('Username WP')" />
+                                <x-text-input id="edit_username" name="username" type="text"
+                                    class="block w-full mt-1" x-model="editData.username" required />
+                                <x-input-error class="mt-2" :messages="$errors->get('username')" />
+                            </div>
+
+                            <div>
+                                <x-input-label for="edit_password" :value="__('Password WP')" />
+                                <x-text-input id="edit_password" name="password" type="text"
+                                    class="block w-full mt-1" x-model="editData.password" required />
+                                <x-input-error class="mt-2" :messages="$errors->get('password')" />
+                            </div>
                         </div>
 
                         <div class="flex items-center gap-2 py-2">
