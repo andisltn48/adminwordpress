@@ -44,5 +44,5 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/api/berita', [\App\Http\Controllers\Api\BeritaApiController::class, 'getDetail']);
 Route::get('/api/berita/{id}', [\App\Http\Controllers\Api\BeritaApiController::class, 'getDetailById']);
-
+Route::get('/manual-sync-to-wp', [BeritaController::class, 'manualSyncToWP'])->name('manual-sync-to-wp');
 require __DIR__ . '/auth.php';

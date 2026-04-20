@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BeritaWebsite;
 use App\Models\Website;
 use App\Models\Berita;
 use App\Models\NewsHistory;
@@ -325,4 +326,34 @@ class BeritaController extends Controller
 
         return $response->successful() || $response->status() == 404;
     }
+
+    public function manualSyncToWP() {
+        //delete all news history
+        NewsHistory::truncate();
+
+        $beritaWebistes = BeritaWebsite::all();
+        foreach ($beritaWebistes as $beritaWebsite) {
+            
+            $berita = Berita::find($beritaWebsite->berita_id);
+            $website = Website::find($beritaWebsite->website_id);
+            $imagePath = $berita->featured_image;
+            $result = $this->syncToWordpress($berita, $website, $imagePath);
+            
+            if ($result['wp_post_id']) {
+                $beritaWebsite->wp_post_id = $result['wp_post_id'];
+                $beritaWebsite->detail_url = $result['detail_url'];
+                $beritaWebsite->save();
+
+                NewsHistory::create([
+                    'berita_id' => $berita->id,
+                    'website_id' => $website->id,
+                    'user_id' => 1,
+                    'judul' => $berita->judul,
+                    'status' => $berita->status,
+                    'detail_url' => $result['detail_url'],
+                ]);
+            }
+        }
+    }
+
 }
