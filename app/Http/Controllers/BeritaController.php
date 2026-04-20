@@ -6,6 +6,7 @@ use App\Models\Website;
 use App\Models\Berita;
 use App\Models\NewsHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Storage;
 
@@ -97,7 +98,7 @@ class BeritaController extends Controller
             'news.*.website_ids' => 'required|array|min:1',
             'news.*.status' => 'required|in:Draft,Published',
             'news.*.tanggal_publikasi' => 'nullable|date',
-            'news.*.kategori' => 'required|nullable|string|max:255',
+            'news.*.kategori' => 'required|string|max:255',
         ]);
 
         foreach ($request->news as $newsItem) {
@@ -118,9 +119,13 @@ class BeritaController extends Controller
             $syncData = [];
             foreach ($newsItem['website_ids'] as $webId) {
                 $website = Website::findOrFail($webId);
+
+                $result = $this->syncToWordpress($berita, $website, $imagePath);
+
                 $syncData[$webId] = [
                     'website_url' => $website->url,
-                    'detail_url' => '/detail_berita/' . $berita->id,
+                    'detail_url' => $result['detail_url'],
+                    'wp_post_id' => $result['wp_post_id'],
                 ];
             }
 
@@ -134,7 +139,7 @@ class BeritaController extends Controller
                     'user_id' => auth()->id(),
                     'judul' => $berita->judul,
                     'status' => $berita->status,
-                    'detail_url' => $pivotData['website_url'] . $pivotData['detail_url'],
+                    'detail_url' => $pivotData['detail_url'],
                 ]);
             }
         }
@@ -159,7 +164,6 @@ class BeritaController extends Controller
             return response()->json(['fileName' => $fileName, 'uploaded' => 1, 'url' => $url]);
         }
     }
-
     /**
      * Display the specified resource.
      */
@@ -174,10 +178,151 @@ class BeritaController extends Controller
      */
     public function destroy(Berita $berita)
     {
+        // 1. Hapus dari semua WordPress
+        foreach ($berita->websites as $website) {
+            $wpPostId = $website->pivot->wp_post_id;
+            if ($wpPostId) {
+                $this->deleteFromWordpress($website, $wpPostId);
+            }
+        }
+
+        // 2. Hapus gambar lokal
         if ($berita->featured_image) {
             Storage::disk('public')->delete($berita->featured_image);
         }
+
+        // 3. Hapus record database (beserta pivot karena cascade)
         $berita->delete();
-        return redirect()->route('beritas.index')->with('success', 'Berita berhasil dihapus.');
+
+        return redirect()->route('beritas.index')->with('success', 'Berita berhasil dihapus dari semua platform.');
+    }
+
+    /**
+     * Sync to WordPress
+     * Returns wp_post_id on success, error message on failure
+     */
+    public function syncToWordpress($postLaravel, $website, $imagePath = null)
+    {
+        $user = $website->username;
+        $appPass = $website->password;
+        $baseUrl = $website->url;
+
+        // 1. UPLOAD GAMBAR DULU (Jika ada)
+        $featuredMediaId = null;
+        if ($imagePath) {
+            $fullPath = storage_path('app/public/' . $imagePath);
+            if (file_exists($fullPath)) {
+                $imageResponse = Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0',
+                        'Content-Disposition' => 'attachment; filename="'.basename($fullPath).'"',
+                    ])
+                    ->withBasicAuth($user, $appPass)
+                    ->withoutVerifying()
+                    ->withBody(file_get_contents($fullPath), 'image/jpeg')
+                    ->post($baseUrl . '?rest_route=/wp/v2/media');
+
+                if ($imageResponse->successful()) {
+                    $featuredMediaId = $imageResponse->json()['id'];
+                } else {
+                    \App\Models\SyncFailedLog::updateOrCreate(
+                        ['berita_id' => $postLaravel->id, 'website_id' => $website->id],
+                        [
+                            'error_message' => 'Gagal upload gambar: ' . $imageResponse->body(),
+                            'response_body' => $imageResponse->body(),
+                            'status' => 'failed_image',
+                        ]
+                    );
+                }
+            }
+        }
+
+        // 2. AMBIL CATEGORY ID DARI WORDPRESS (berdasarkan slug)
+        $categoryId = null;
+        if ($postLaravel->kategori) {
+            $catResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
+                ->withBasicAuth($user, $appPass)
+                ->withoutVerifying()
+                ->get($baseUrl . '?rest_route=/wp/v2/categories', [
+                    'slug' => $postLaravel->kategori
+                ]);
+
+            if ($catResponse->successful() && !empty($catResponse->json())) {
+                $categoryId = $catResponse->json()[0]['id'];
+            } else {
+                $createCatResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
+                    ->withBasicAuth($user, $appPass)
+                    ->withoutVerifying()
+                    ->post($baseUrl . '?rest_route=/wp/v2/categories', [
+                        'name' => ucfirst(str_replace('-', ' ', $postLaravel->kategori)),
+                        'slug' => $postLaravel->kategori
+                    ]);
+
+                
+                if ($createCatResponse->successful()) {
+                    $categoryId = $createCatResponse->json()['id'];
+                } else {
+                    $errorResponse = $createCatResponse->json();
+                    // If category name already exists, extract term_id from error
+                    if (isset($errorResponse['code']) && $errorResponse['code'] === 'term_exists') {
+                        $categoryId = $errorResponse['data']['term_id'] ?? null;
+                    }
+                }
+            }
+        }
+
+        // 3. UPLOAD POSTINGAN
+        $postResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
+            ->withBasicAuth($user, $appPass)
+            ->withoutVerifying()
+            ->post($baseUrl . '?rest_route=/wp/v2/posts', [
+                'title'   => $postLaravel->judul,
+                'content' => $postLaravel->konten,
+                'categories' => $categoryId ? [$categoryId] : [],
+                'status'  => 'publish',
+                'featured_media' => $featuredMediaId,
+            ]);
+
+        if ($postResponse->successful()) {
+            $wpPostId = $postResponse->json()['id'];
+            $wpDetailUrl = rtrim($baseUrl, '/') . '/?p=' . $wpPostId;
+            return [
+                'wp_post_id' => $wpPostId,
+                'detail_url' => $wpDetailUrl,
+            ];
+        }
+
+        $errorMessage = "Gagal Sinkron: " . $postResponse->body();
+        \App\Models\SyncFailedLog::updateOrCreate(
+            ['berita_id' => $postLaravel->id, 'website_id' => $website->id],
+            [
+                'error_message' => $errorMessage,
+                'response_body' => $postResponse->body(),
+                'status' => 'failed',
+            ]
+        );
+
+        return [
+            'wp_post_id' => null,
+            'detail_url' => null,
+            'error' => $errorMessage,
+        ];
+    }
+
+    public function deleteFromWordpress($website, $wpPostId)
+    {
+        if (!$wpPostId || !$website) {   
+            return false;
+        }
+
+        $user = $website->username;
+        $appPass = $website->password;
+        $baseUrl = $website->url;
+
+        $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
+            ->withBasicAuth($user, $appPass)
+            ->withoutVerifying()
+            ->delete($baseUrl . "?rest_route=/wp/v2/posts/{$wpPostId}&force=true");
+
+        return $response->successful() || $response->status() == 404;
     }
 }

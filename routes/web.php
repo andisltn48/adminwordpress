@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\BeritaController;
+use App\Http\Controllers\SyncFailedLogController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -36,6 +37,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('websites', WebsiteController::class);
     Route::resource('beritas', BeritaController::class);
     Route::post('beritas/upload-image', [BeritaController::class, 'uploadImage'])->name('beritas.upload_image');
+
+    Route::get('/sync-failed-logs', [SyncFailedLogController::class, 'index'])->name('sync-failed-logs.index');
+    Route::post('/sync-failed-logs/{id}/retry', [SyncFailedLogController::class, 'retry'])->name('sync-failed-logs.retry');
 });
 
 Route::get('/api/berita', [\App\Http\Controllers\Api\BeritaApiController::class, 'getDetail']);

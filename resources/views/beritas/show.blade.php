@@ -89,9 +89,9 @@
                                     <div class="flex flex-col gap-1">
                                         <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">URL
                                             Detail:</span>
-                                        <a href="{{ $web->pivot->website_url . $web->pivot->detail_url }}" target="_blank"
+                                        <a href="{{ $web->pivot->detail_url }}" target="_blank"
                                             class="text-xs text-primary-600 font-medium hover:underline break-all">
-                                            {{ $web->pivot->website_url . $web->pivot->detail_url }}
+                                            {{ $web->pivot->detail_url }}
                                         </a>
                                     </div>
                                 </div>
