@@ -337,16 +337,17 @@ class BeritaController extends Controller
     {
         $user = $website->username;
         $appPass = $website->password;
-        $baseUrl = $website->url;
+        $baseUrl = rtrim($website->url, '/');
         $slug = \Illuminate\Support\Str::slug($judul);
 
-        // 1. Coba cari berdasarkan SLUG (paling akurat)
+        // 1. Coba cari berdasarkan SLUG
         $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
             ->withBasicAuth($user, $appPass)
             ->withoutVerifying()
-            ->get($baseUrl . '?rest_route=/wp/v2/posts', [
+            ->get($baseUrl . '/', [
+                'rest_route' => '/wp/v2/posts',
                 'slug' => $slug,
-                'status' => 'publish,draft,future,private,pending,trash',
+                'status' => 'publish,draft,future,private,pending',
             ]);
 
         if ($response->successful()) {
@@ -359,13 +360,13 @@ class BeritaController extends Controller
             }
         }
 
-        // 2. Fallback: Cari berdasarkan Search Query jika slug tidak ketemu
+        // 2. Fallback: Cari berdasarkan Search Query
         $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
             ->withBasicAuth($user, $appPass)
             ->withoutVerifying()
-            ->get($baseUrl . '?rest_route=/wp/v2/posts', [
+            ->get($baseUrl . '/', [
+                'rest_route' => '/wp/v2/posts',
                 'search' => $judul,
-                'status' => 'publish,draft,future,private,pending',
                 'per_page' => 50,
             ]);
 
