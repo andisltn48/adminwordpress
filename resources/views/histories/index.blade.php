@@ -82,7 +82,7 @@
                                     <th class="px-6 py-4">{{ __('Portal Website') }}</th>
                                     <th class="px-6 py-4">{{ __('Status') }}</th>
                                     <th class="px-6 py-4">{{ __('Oleh') }}</th>
-                                    <th class="px-6 py-4">{{ __('Waktu') }}</th>
+                                    <th class="px-6 py-4">{{ __('Waktu Publikasi') }}</th>
                                     <th class="px-6 py-4 text-center">{{ __('Aksi') }}</th>
                                 </tr>
                             </thead>
@@ -131,7 +131,7 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 text-xs text-slate-400 font-medium">
-                                            {{ $history->created_at->format('d M Y, H:i') }}
+                                            {{ $history->berita?->tanggal_publikasi?->format('d M Y') ?? '-' }}
                                         </td>
                                         <td class="px-6 py-5 last:rounded-r-2xl text-center">
                                             <div class="flex items-center justify-center gap-2">
