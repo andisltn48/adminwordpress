@@ -333,6 +333,38 @@ class BeritaController extends Controller
         return $response->successful() || $response->status() == 404;
     }
 
+    public function findExistingPostOnWP($judul, $website)
+    {
+        $user = $website->username;
+        $appPass = $website->password;
+        $baseUrl = $website->url;
+
+        $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
+            ->withBasicAuth($user, $appPass)
+            ->withoutVerifying()
+            ->get($baseUrl . '?rest_route=/wp/v2/posts', [
+                'search' => $judul,
+            ]);
+
+        if ($response->successful()) {
+            $posts = $response->json();
+            if (is_array($posts)) {
+                foreach ($posts as $post) {
+                    // Decode HTML entities to compare with plain text title
+                    $wpTitle = html_entity_decode($post['title']['rendered'], ENT_QUOTES, 'UTF-8');
+                    if ($wpTitle === $judul) {
+                        return [
+                            'wp_post_id' => $post['id'],
+                            'detail_url' => $post['link'],
+                        ];
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function manualSyncToWP() {
         //delete all news history
         NewsHistory::truncate();
@@ -342,10 +374,18 @@ class BeritaController extends Controller
             
             $berita = Berita::find($beritaWebsite->berita_id);
             $website = Website::find($beritaWebsite->website_id);
-            $imagePath = $berita->featured_image;
-            $result = $this->syncToWordpress($berita, $website, $imagePath);
+
+            // Cek apakah sudah ada di WP berdasarkan judul
+            $existing = $this->findExistingPostOnWP($berita->judul, $website);
             
-            if ($result['wp_post_id']) {
+            if ($existing) {
+                $result = $existing;
+            } else {
+                $imagePath = $berita->featured_image;
+                $result = $this->syncToWordpress($berita, $website, $imagePath);
+            }
+            
+            if (isset($result['wp_post_id']) && $result['wp_post_id']) {
                 $beritaWebsite->wp_post_id = $result['wp_post_id'];
                 $beritaWebsite->detail_url = $result['detail_url'];
                 $beritaWebsite->save();
