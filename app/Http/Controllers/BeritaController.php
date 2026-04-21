@@ -279,6 +279,7 @@ class BeritaController extends Controller
                 'title'   => $postLaravel->judul,
                 'content' => $postLaravel->konten,
                 'categories' => $categoryId ? [$categoryId] : [],
+                'date' => $postLaravel->tanggal_publikasi ? $postLaravel->tanggal_publikasi . 'T00:00:00' : null,
                 'status'  => 'publish',
                 'featured_media' => $featuredMediaId,
             ]);

@@ -23,7 +23,9 @@ class NewsHistoryExport implements FromQuery, WithHeadings, WithMapping
 
     public function query()
     {
-        $query = NewsHistory::with(['website', 'user'])->latest();
+        $query = NewsHistory::with(['website', 'user'])
+            ->orderBy('website_id')
+            ->orderBy('created_at', 'desc');
 
         if ($this->startDate) {
             $query->whereDate('created_at', '>=', $this->startDate);
@@ -40,8 +42,8 @@ class NewsHistoryExport implements FromQuery, WithHeadings, WithMapping
     {
         return [
             '#',
-            'Judul Berita',
             'Website Tujuan',
+            'Judul Berita',
             'Status',
             'Oleh',
             'URL Detail (WordPress)',
@@ -52,10 +54,16 @@ class NewsHistoryExport implements FromQuery, WithHeadings, WithMapping
     public function map($history): array
     {
         static $row = 1;
+        static $prevWebsiteId = null;
+
+        $websiteName = $history->website->nama_website ?? '-';
+        $showWebsite = $history->website_id !== $prevWebsiteId;
+        $prevWebsiteId = $history->website_id;
+
         return [
             $row++,
+            $showWebsite ? $websiteName : '',
             $history->judul,
-            $history->website->nama_website ?? '-',
             $history->status,
             $history->user->name ?? '-',
             $history->detail_url,
