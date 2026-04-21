@@ -344,15 +344,20 @@ class BeritaController extends Controller
             ->withoutVerifying()
             ->get($baseUrl . '?rest_route=/wp/v2/posts', [
                 'search' => $judul,
+                'status' => 'publish,draft,future,private,pending',
+                'per_page' => 100,
             ]);
 
         if ($response->successful()) {
             $posts = $response->json();
             if (is_array($posts)) {
+                $targetJudul = strtolower(trim($judul));
                 foreach ($posts as $post) {
-                    // Decode HTML entities to compare with plain text title
+                    // Decode HTML entities and clean whitespace
                     $wpTitle = html_entity_decode($post['title']['rendered'], ENT_QUOTES, 'UTF-8');
-                    if ($wpTitle === $judul) {
+                    $wpTitle = strtolower(trim($wpTitle));
+
+                    if ($wpTitle === $targetJudul) {
                         return [
                             'wp_post_id' => $post['id'],
                             'detail_url' => $post['link'],
@@ -360,6 +365,7 @@ class BeritaController extends Controller
                     }
                 }
             }
+        }
         }
 
         return null;
