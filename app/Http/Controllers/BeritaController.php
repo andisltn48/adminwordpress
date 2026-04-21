@@ -272,17 +272,22 @@ class BeritaController extends Controller
         }
 
         // 3. UPLOAD POSTINGAN
+        $postData = [
+            'title'   => $postLaravel->judul,
+            'content' => $postLaravel->konten,
+            'categories' => $categoryId ? [$categoryId] : [],
+            'status'  => 'publish',
+            'featured_media' => $featuredMediaId,
+        ];
+
+        if ($postLaravel->tanggal_publikasi) {
+            $postData['date_gmt'] = $postLaravel->tanggal_publikasi->format('Y-m-d\TH:i:s');
+        }
+
         $postResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
             ->withBasicAuth($user, $appPass)
             ->withoutVerifying()
-            ->post($baseUrl . '?rest_route=/wp/v2/posts', [
-                'title'   => $postLaravel->judul,
-                'content' => $postLaravel->konten,
-                'categories' => $categoryId ? [$categoryId] : [],
-                'date' => $postLaravel->tanggal_publikasi ? $postLaravel->tanggal_publikasi . 'T00:00:00' : null,
-                'status'  => 'publish',
-                'featured_media' => $featuredMediaId,
-            ]);
+            ->post($baseUrl . '?rest_route=/wp/v2/posts', $postData);
 
         if ($postResponse->successful()) {
             $wpPostId = $postResponse->json()['id'];

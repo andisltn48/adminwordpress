@@ -49,6 +49,7 @@
                                     <th>{{ __('Gambar') }}</th>
                                     <th>{{ __('Judul Berita') }}</th>
                                     <th>{{ __('Website Target') }}</th>
+                                    <th>{{ __('Tanggal Publikasi') }}</th>
                                     <th>{{ __('Status') }}</th>
                                     <th class="text-right">{{ __('Aksi') }}</th>
                                 </tr>
@@ -96,6 +97,11 @@
                         name: 'target_websites',
                         orderable: false,
                         searchable: false,
+                    },
+                    {
+                        data: 'tanggal_publikasi',
+                        name: 'tanggal_publikasi',
+                        width: '15%'
                     },
                     {
                         data: 'status',
