@@ -338,25 +338,47 @@ class BeritaController extends Controller
         $user = $website->username;
         $appPass = $website->password;
         $baseUrl = $website->url;
+        $slug = \Illuminate\Support\Str::slug($judul);
 
+        // 1. Coba cari berdasarkan SLUG (paling akurat)
+        $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
+            ->withBasicAuth($user, $appPass)
+            ->withoutVerifying()
+            ->get($baseUrl . '?rest_route=/wp/v2/posts', [
+                'slug' => $slug,
+                'status' => 'publish,draft,future,private,pending,trash',
+            ]);
+
+        if ($response->successful()) {
+            $posts = $response->json();
+            if (is_array($posts) && !empty($posts)) {
+                return [
+                    'wp_post_id' => $posts[0]['id'],
+                    'detail_url' => $posts[0]['link'],
+                ];
+            }
+        }
+
+        // 2. Fallback: Cari berdasarkan Search Query jika slug tidak ketemu
         $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
             ->withBasicAuth($user, $appPass)
             ->withoutVerifying()
             ->get($baseUrl . '?rest_route=/wp/v2/posts', [
                 'search' => $judul,
                 'status' => 'publish,draft,future,private,pending',
-                'per_page' => 100,
+                'per_page' => 50,
             ]);
 
         if ($response->successful()) {
             $posts = $response->json();
             if (is_array($posts)) {
-                $targetJudul = strtolower(trim($judul));
+                // Normalisasi judul target: lowercase, trim, hapus special chars/spaces
+                $targetJudul = preg_replace('/\s+/', ' ', strtolower(trim(html_entity_decode($judul, ENT_QUOTES, 'UTF-8'))));
+                
                 foreach ($posts as $post) {
-                    // Decode HTML entities and clean whitespace
                     $wpTitle = html_entity_decode($post['title']['rendered'], ENT_QUOTES, 'UTF-8');
-                    $wpTitle = strtolower(trim($wpTitle));
-
+                    $wpTitle = preg_replace('/\s+/', ' ', strtolower(trim($wpTitle)));
+                    
                     if ($wpTitle === $targetJudul) {
                         return [
                             'wp_post_id' => $post['id'],
@@ -365,7 +387,6 @@ class BeritaController extends Controller
                     }
                 }
             }
-        }
         }
 
         return null;
