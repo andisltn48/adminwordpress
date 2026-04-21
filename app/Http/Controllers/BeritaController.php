@@ -338,27 +338,6 @@ class BeritaController extends Controller
         $user = $website->username;
         $appPass = $website->password;
         $baseUrl = rtrim($website->url, '/');
-        $slug = \Illuminate\Support\Str::slug($judul);
-
-        // 1. Coba cari berdasarkan SLUG
-        $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
-            ->withBasicAuth($user, $appPass)
-            ->withoutVerifying()
-            ->get($baseUrl . '/', [
-                'rest_route' => '/wp/v2/posts',
-                'slug' => $slug,
-                'status' => 'publish,draft,future,private,pending',
-            ]);
-
-        if ($response->successful()) {
-            $posts = $response->json();
-            if (is_array($posts) && !empty($posts)) {
-                return [
-                    'wp_post_id' => $posts[0]['id'],
-                    'detail_url' => $posts[0]['link'],
-                ];
-            }
-        }
 
         // 2. Fallback: Cari berdasarkan Search Query
         $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
@@ -405,7 +384,6 @@ class BeritaController extends Controller
 
             // Cek apakah sudah ada di WP berdasarkan judul
             $existing = $this->findExistingPostOnWP($berita->judul, $website);
-            
             if ($existing) {
                 $result = $existing;
             } else {
