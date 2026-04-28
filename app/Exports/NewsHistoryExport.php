@@ -25,7 +25,7 @@ class NewsHistoryExport implements FromQuery, WithHeadings, WithMapping
     {
         $query = NewsHistory::with(['website', 'user', 'berita'])
             ->orderBy('website_id')
-            ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'asc');
 
         if ($this->startDate) {
             $query->whereDate('created_at', '>=', $this->startDate);
