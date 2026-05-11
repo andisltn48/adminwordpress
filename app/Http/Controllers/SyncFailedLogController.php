@@ -68,23 +68,11 @@ class SyncFailedLogController extends Controller
         $berita = $failedLog->berita;
         $website = $failedLog->website;
 
-        // Jalankan ulang sync
-        $controller = new BeritaController();
-        $imagePath = $berita->featured_image; // Pass the relative path as used in controller
-        $result = $controller->syncToWordpress($berita, $website, $imagePath);
-
-        if ($result['wp_post_id']) {
-            // Berhasil! Update pivot table
-            $berita->websites()->updateExistingPivot($website->id, [
-                'wp_post_id' => $result['wp_post_id'],
-                'detail_url' => $result['detail_url'],
-            ]);
-
-            // Hapus log jika berhasil
-            $failedLog->delete();
-            return redirect()->route('sync-failed-logs.index')->with('success', 'Sync ulang berhasil! Log dihapus.');
+        if ($berita && $website) {
+            \App\Jobs\SyncNewsJob::dispatch($berita, $website, auth()->id());
+            return redirect()->route('sync-failed-logs.index')->with('success', 'Berhasil menjadwalkan ulang sinkronisasi. Hasil akan diperbarui otomatis di latar belakang.');
         }
 
-        return redirect()->route('sync-failed-logs.index')->with('error', 'Sync ulang masih gagal: ' . ($result['error'] ?? 'Unknown error'));
+        return redirect()->route('sync-failed-logs.index')->with('error', 'Gagal menjadwalkan ulang: Data berita atau website tidak ditemukan.');
     }
 }

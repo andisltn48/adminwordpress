@@ -120,32 +120,45 @@ class BeritaController extends Controller
             $syncData = [];
             foreach ($newsItem['website_ids'] as $webId) {
                 $website = Website::findOrFail($webId);
-
-                $result = $this->syncToWordpress($berita, $website, $imagePath);
-
+                
+                // Set initial pivot data
                 $syncData[$webId] = [
                     'website_url' => $website->url,
-                    'detail_url' => $result['detail_url'],
-                    'wp_post_id' => $result['wp_post_id'],
+                    'detail_url' => null,
+                    'wp_post_id' => null,
                 ];
+
+                // Dispatch Job for each website
+                \App\Jobs\SyncNewsJob::dispatch($berita, $website, auth()->id());
             }
 
             $berita->websites()->sync($syncData);
+        }
 
-            // Log History per Website
-            foreach ($syncData as $webId => $pivotData) {
-                NewsHistory::create([
-                    'berita_id' => $berita->id,
-                    'website_id' => $webId,
-                    'user_id' => auth()->id(),
-                    'judul' => $berita->judul,
-                    'status' => $berita->status,
-                    'detail_url' => $pivotData['detail_url'],
-                ]);
+        return redirect()->route('beritas.index')->with('success', 'Berita berhasil disimpan dan sedang dalam proses sinkronisasi di latar belakang.');
+    }
+
+    /**
+     * Rerun all failed sync jobs.
+     */
+    public function rerunFailedJobs()
+    {
+        $failedLogs = \App\Models\SyncFailedLog::all();
+
+        if ($failedLogs->isEmpty()) {
+            return redirect()->back()->with('info', 'Tidak ada sinkronisasi yang gagal untuk dijalankan ulang.');
+        }
+
+        foreach ($failedLogs as $log) {
+            $berita = $log->berita;
+            $website = $log->website;
+
+            if ($berita && $website) {
+                \App\Jobs\SyncNewsJob::dispatch($berita, $website, auth()->id());
             }
         }
 
-        return redirect()->route('beritas.index')->with('success', 'Berita berhasil disimpan.');
+        return redirect()->back()->with('success', 'Berhasil menjalankan ulang ' . $failedLogs->count() . ' sinkronisasi yang gagal.');
     }
 
     /**
@@ -198,123 +211,6 @@ class BeritaController extends Controller
         return redirect()->route('beritas.index')->with('success', 'Berita berhasil dihapus dari semua platform.');
     }
 
-    /**
-     * Sync to WordPress
-     * Returns wp_post_id on success, error message on failure
-     */
-    public function syncToWordpress($postLaravel, $website, $imagePath = null)
-    {
-        $user = $website->username;
-        $appPass = $website->password;
-        $baseUrl = $website->url;
-
-        // 1. UPLOAD GAMBAR DULU (Jika ada)
-        $featuredMediaId = null;
-        if ($imagePath) {
-            $fullPath = storage_path('app/public/' . $imagePath);
-            if (file_exists($fullPath)) {
-                $imageResponse = Http::withHeaders([
-                        'User-Agent' => 'Mozilla/5.0',
-                        'Content-Disposition' => 'attachment; filename="'.basename($fullPath).'"',
-                    ])
-                    ->withBasicAuth($user, $appPass)
-                    ->withoutVerifying()
-                    ->withBody(file_get_contents($fullPath), 'image/jpeg')
-                    ->post($baseUrl . '?rest_route=/wp/v2/media');
-
-                if ($imageResponse->successful()) {
-                    $featuredMediaId = $imageResponse->json()['id'];
-                } else {
-                    \App\Models\SyncFailedLog::updateOrCreate(
-                        ['berita_id' => $postLaravel->id, 'website_id' => $website->id],
-                        [
-                            'error_message' => 'Gagal upload gambar: ' . $imageResponse->body(),
-                            'response_body' => $imageResponse->body(),
-                            'status' => 'failed_image',
-                        ]
-                    );
-                }
-            }
-        }
-
-        // 2. AMBIL CATEGORY ID DARI WORDPRESS (berdasarkan slug)
-        $categoryId = null;
-        if ($postLaravel->kategori) {
-            $catResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
-                ->withBasicAuth($user, $appPass)
-                ->withoutVerifying()
-                ->get($baseUrl . '?rest_route=/wp/v2/categories', [
-                    'slug' => $postLaravel->kategori
-                ]);
-
-            if ($catResponse->successful() && !empty($catResponse->json())) {
-                $categoryId = $catResponse->json()[0]['id'];
-            } else {
-                $createCatResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
-                    ->withBasicAuth($user, $appPass)
-                    ->withoutVerifying()
-                    ->post($baseUrl . '?rest_route=/wp/v2/categories', [
-                        'name' => ucfirst(str_replace('-', ' ', $postLaravel->kategori)),
-                        'slug' => $postLaravel->kategori
-                    ]);
-
-                
-                if ($createCatResponse->successful()) {
-                    $categoryId = $createCatResponse->json()['id'];
-                } else {
-                    $errorResponse = $createCatResponse->json();
-                    // If category name already exists, extract term_id from error
-                    if (isset($errorResponse['code']) && $errorResponse['code'] === 'term_exists') {
-                        $categoryId = $errorResponse['data']['term_id'] ?? null;
-                    }
-                }
-            }
-        }
-
-        // 3. UPLOAD POSTINGAN
-        $postData = [
-            'title'   => $postLaravel->judul,
-            'content' => $postLaravel->konten,
-            'categories' => $categoryId ? [$categoryId] : [],
-            'status'  => 'publish',
-            'featured_media' => $featuredMediaId,
-        ];
-
-        if ($postLaravel->tanggal_publikasi) {
-            $postData['date_gmt'] = $postLaravel->tanggal_publikasi->format('Y-m-d\TH:i:s');
-        }
-
-        $postResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
-            ->withBasicAuth($user, $appPass)
-            ->withoutVerifying()
-            ->post($baseUrl . '?rest_route=/wp/v2/posts', $postData);
-
-        if ($postResponse->successful()) {
-            $wpPostId = $postResponse->json()['id'];
-            $wpDetailUrl = rtrim($baseUrl, '/') . '/?p=' . $wpPostId;
-            return [
-                'wp_post_id' => $wpPostId,
-                'detail_url' => $wpDetailUrl,
-            ];
-        }
-
-        $errorMessage = "Gagal Sinkron: " . $postResponse->body();
-        \App\Models\SyncFailedLog::updateOrCreate(
-            ['berita_id' => $postLaravel->id, 'website_id' => $website->id],
-            [
-                'error_message' => $errorMessage,
-                'response_body' => $postResponse->body(),
-                'status' => 'failed',
-            ]
-        );
-
-        return [
-            'wp_post_id' => null,
-            'detail_url' => null,
-            'error' => $errorMessage,
-        ];
-    }
-
     public function deleteFromWordpress($website, $wpPostId)
     {
         if (!$wpPostId || !$website) {   
@@ -333,45 +229,6 @@ class BeritaController extends Controller
         return $response->successful() || $response->status() == 404;
     }
 
-    public function findExistingPostOnWP($judul, $website)
-    {
-        $user = $website->username;
-        $appPass = $website->password;
-        $baseUrl = rtrim($website->url, '/');
-
-        // 2. Fallback: Cari berdasarkan Search Query
-        $response = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
-            ->withBasicAuth($user, $appPass)
-            ->withoutVerifying()
-            ->get($baseUrl . '/', [
-                'rest_route' => '/wp/v2/posts',
-                'search' => $judul,
-                'per_page' => 50,
-            ]);
-
-        if ($response->successful()) {
-            $posts = $response->json();
-            if (is_array($posts)) {
-                // Normalisasi judul target: lowercase, trim, hapus special chars/spaces
-                $targetJudul = preg_replace('/\s+/', ' ', strtolower(trim(html_entity_decode($judul, ENT_QUOTES, 'UTF-8'))));
-                
-                foreach ($posts as $post) {
-                    $wpTitle = html_entity_decode($post['title']['rendered'], ENT_QUOTES, 'UTF-8');
-                    $wpTitle = preg_replace('/\s+/', ' ', strtolower(trim($wpTitle)));
-                    
-                    if ($wpTitle === $targetJudul) {
-                        return [
-                            'wp_post_id' => $post['id'],
-                            'detail_url' => $post['link'],
-                        ];
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
     public function manualSyncToWP() {
         //delete all news history
         NewsHistory::truncate();
@@ -382,30 +239,12 @@ class BeritaController extends Controller
             $berita = Berita::find($beritaWebsite->berita_id);
             $website = Website::find($beritaWebsite->website_id);
 
-            // Cek apakah sudah ada di WP berdasarkan judul
-            $existing = $this->findExistingPostOnWP($berita->judul, $website);
-            if ($existing) {
-                $result = $existing;
-            } else {
-                $imagePath = $berita->featured_image;
-                $result = $this->syncToWordpress($berita, $website, $imagePath);
-            }
-            
-            if (isset($result['wp_post_id']) && $result['wp_post_id']) {
-                $beritaWebsite->wp_post_id = $result['wp_post_id'];
-                $beritaWebsite->detail_url = $result['detail_url'];
-                $beritaWebsite->save();
-
-                NewsHistory::create([
-                    'berita_id' => $berita->id,
-                    'website_id' => $website->id,
-                    'user_id' => 1,
-                    'judul' => $berita->judul,
-                    'status' => $berita->status,
-                    'detail_url' => $result['detail_url'],
-                ]);
+            if ($berita && $website) {
+                \App\Jobs\SyncNewsJob::dispatch($berita, $website, 1);
             }
         }
+
+        return redirect()->back()->with('success', 'Berhasil menjadwalkan sinkronisasi manual untuk semua berita.');
     }
 
 }

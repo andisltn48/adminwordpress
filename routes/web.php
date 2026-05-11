@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/sync-failed-logs', [SyncFailedLogController::class, 'index'])->name('sync-failed-logs.index');
     Route::post('/sync-failed-logs/{id}/retry', [SyncFailedLogController::class, 'retry'])->name('sync-failed-logs.retry');
+    Route::get('/beritas/rerun-failed', [BeritaController::class, 'rerunFailedJobs'])->name('beritas.rerun_failed');
 });
 
 Route::get('/api/berita', [\App\Http\Controllers\Api\BeritaApiController::class, 'getDetail']);
