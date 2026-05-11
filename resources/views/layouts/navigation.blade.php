@@ -29,9 +29,10 @@
                         class="text-slate-600 hover:text-primary-600 transition-colors">
                         {{ __('Riwayat') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('sync-failed-logs.index')" :active="request()->routeIs('sync-failed-logs.*')"
+                    
+                    <x-nav-link :href="route('failed-jobs.index')" :active="request()->routeIs('failed-jobs.*')"
                         class="text-slate-600 hover:text-rose-600 transition-colors">
-                        {{ __('Sync Gagal') }}
+                        {{ __('Failed Jobs') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -102,8 +103,9 @@
             <x-responsive-nav-link :href="route('beritas.index')" :active="request()->routeIs('beritas.*')">
                 {{ __('Manajemen Berita') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('sync-failed-logs.index')" :active="request()->routeIs('sync-failed-logs.*')">
-                {{ __('Sync Gagal') }}
+            
+            <x-responsive-nav-link :href="route('failed-jobs.index')" :active="request()->routeIs('failed-jobs.*')">
+                {{ __('Failed Jobs') }}
             </x-responsive-nav-link>
         </div>
 

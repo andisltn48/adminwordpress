@@ -107,6 +107,49 @@
                 </div>
             </div>
 
+            <!-- Failure Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <a href="{{ route('sync-failed-logs.index') }}" class="group">
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-3xl border border-slate-100 p-8 flex flex-col justify-between relative transition-all hover:shadow-xl hover:-translate-y-1">
+                        <div class="flex items-center gap-2 mb-4 text-rose-600">
+                            <div class="p-2 bg-rose-100 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <span class="font-extrabold text-sm uppercase tracking-widest">{{ __('Sync Gagal') }}</span>
+                        </div>
+                        <div class="flex items-end gap-3">
+                            <span class="text-4xl font-black text-slate-900 leading-none">{{ $failedStats['sync_failed'] }}</span>
+                            <span class="text-lg font-bold text-slate-400 pb-1 leading-none">{{ __('Log Kegagalan') }}</span>
+                        </div>
+                        <div class="mt-4 text-xs font-bold text-rose-500 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                            Lihat Detail <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ route('failed-jobs.index') }}" class="group">
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-3xl border border-slate-100 p-8 flex flex-col justify-between relative transition-all hover:shadow-xl hover:-translate-y-1">
+                        <div class="flex items-center gap-2 mb-4 text-amber-600">
+                            <div class="p-2 bg-amber-100 rounded-lg">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <span class="font-extrabold text-sm uppercase tracking-widest">{{ __('Queue Failed') }}</span>
+                        </div>
+                        <div class="flex items-end gap-3">
+                            <span class="text-4xl font-black text-slate-900 leading-none">{{ $failedStats['queue_failed'] }}</span>
+                            <span class="text-lg font-bold text-slate-400 pb-1 leading-none">{{ __('Job Gagal') }}</span>
+                        </div>
+                        <div class="mt-4 text-xs font-bold text-amber-500 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                            Lihat Detail <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
             <!-- Dashboard Welcome Card -->
             <div class="bg-slate-900 overflow-hidden shadow-2xl sm:rounded-3xl p-10 text-white relative">
                 <div class="relative z-10 w-full md:w-2/3">

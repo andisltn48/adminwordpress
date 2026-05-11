@@ -18,6 +18,13 @@ class SyncNewsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /**
+     * Delete the job if its models no longer exist.
+     *
+     * @var bool
+     */
+    public $deleteWhenMissingModels = true;
+
     protected $berita;
     protected $website;
     protected $userId;
@@ -51,22 +58,45 @@ class SyncNewsJob implements ShouldQueue
             if ($imagePath) {
                 $fullPath = storage_path('app/public/' . $imagePath);
                 if (file_exists($fullPath)) {
-                    $imageResponse = Http::withHeaders([
-                            'User-Agent' => 'Mozilla/5.0',
-                            'Content-Disposition' => 'attachment; filename="'.basename($fullPath).'"',
-                        ])
+                    $mimeType = mime_content_type($fullPath) ?: 'image/jpeg';
+                    
+                    // Gunakan attach (Multipart) dan index.php untuk menghindari redirect
+                    $imageResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
                         ->withBasicAuth($user, $appPass)
                         ->withoutVerifying()
-                        ->withBody(file_get_contents($fullPath), 'image/jpeg')
-                        ->post($baseUrl . '?rest_route=/wp/v2/media');
-
+                        ->attach(
+                            'file', 
+                            file_get_contents($fullPath), 
+                            basename($fullPath),
+                            ['Content-Type' => $mimeType]
+                        )
+                        ->post($baseUrl . '/index.php?rest_route=/wp/v2/media');
+                        Log::info('WP Media Response:', [
+                            'status' => $imageResponse->status(),
+                            'body'   => $imageResponse->body(),
+                            'json'   => $imageResponse->json(),
+                        ]);
                     if ($imageResponse->successful()) {
-                        $featuredMediaId = $imageResponse->json() ? $imageResponse->json()['id'] : null;
+                        $responseData = $this->getCleanJson($imageResponse);
+
+                        if (isset($responseData['id'])) {
+                            $featuredMediaId = $responseData['id'];
+                        } else {
+                            Log::warning("WP Media Upload Success but JSON Invalid. Raw Body: " . $imageResponse->body());
+                            SyncFailedLog::updateOrCreate(
+                                ['berita_id' => $berita->id, 'website_id' => $website->id],
+                                [
+                                    'error_message' => 'Upload berhasil tapi respons JSON rusak (mungkin ada PHP Notice di server WP).',
+                                    'response_body' => $imageResponse->body(),
+                                    'status' => 'failed_image',
+                                ]
+                            );
+                        }
                     } else {
                         SyncFailedLog::updateOrCreate(
                             ['berita_id' => $berita->id, 'website_id' => $website->id],
                             [
-                                'error_message' => 'Gagal upload gambar: ' . $imageResponse->body(),
+                                'error_message' => 'Gagal upload gambar: ' . ($imageResponse->json('message') ?? $imageResponse->body()),
                                 'response_body' => $imageResponse->body(),
                                 'status' => 'failed_image',
                             ]
@@ -81,25 +111,27 @@ class SyncNewsJob implements ShouldQueue
                 $catResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
                     ->withBasicAuth($user, $appPass)
                     ->withoutVerifying()
-                    ->get($baseUrl . '?rest_route=/wp/v2/categories', [
+                    ->get($baseUrl . '/index.php?rest_route=/wp/v2/categories', [
                         'slug' => $berita->kategori
                     ]);
 
-                if ($catResponse->successful() && !empty($catResponse->json())) {
-                    $categoryId = $catResponse->json()[0]['id'];
+                $catData = $this->getCleanJson($catResponse);
+                if ($catResponse->successful() && !empty($catData)) {
+                    $categoryId = $catData[0]['id'] ?? null;
                 } else {
                     $createCatResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
                         ->withBasicAuth($user, $appPass)
                         ->withoutVerifying()
-                        ->post($baseUrl . '?rest_route=/wp/v2/categories', [
+                        ->post($baseUrl . '/index.php?rest_route=/wp/v2/categories', [
                             'name' => ucfirst(str_replace('-', ' ', $berita->kategori)),
                             'slug' => $berita->kategori
                         ]);
 
                     if ($createCatResponse->successful()) {
-                        $categoryId = $createCatResponse->json()['id'];
+                        $createCatData = $this->getCleanJson($createCatResponse);
+                        $categoryId = $createCatData['id'] ?? null;
                     } else {
-                        $errorResponse = $createCatResponse->json();
+                        $errorResponse = $this->getCleanJson($createCatResponse);
                         if (isset($errorResponse['code']) && $errorResponse['code'] === 'term_exists') {
                             $categoryId = $errorResponse['data']['term_id'] ?? null;
                         }
@@ -123,10 +155,16 @@ class SyncNewsJob implements ShouldQueue
             $postResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0'])
                 ->withBasicAuth($user, $appPass)
                 ->withoutVerifying()
-                ->post($baseUrl . '?rest_route=/wp/v2/posts', $postData);
+                ->post($baseUrl . '/index.php?rest_route=/wp/v2/posts', $postData);
 
             if ($postResponse->successful()) {
-                $wpPostId = $postResponse->json()['id'];
+                $postDataResult = $this->getCleanJson($postResponse);
+                $wpPostId = $postDataResult['id'] ?? null;
+
+                if (!$wpPostId) {
+                    throw new \Exception("Gagal mendapatkan ID postingan dari respons WordPress.");
+                }
+
                 $wpDetailUrl = $baseUrl . '/?p=' . $wpPostId;
 
                 // Update Pivot Table
@@ -176,5 +214,38 @@ class SyncNewsJob implements ShouldQueue
             );
             throw $e; // Re-throw to let Laravel handle it as a failed job
         }
+    }
+
+    /**
+     * Clean and decode JSON response that might contain garbage text.
+     */
+    private function getCleanJson($response)
+    {
+        $rawBody = $response->body();
+        $cleanBody = $rawBody;
+
+        if (!str_starts_with(trim($rawBody), '{') && !str_starts_with(trim($rawBody), '[')) {
+            $firstBrace = strpos($rawBody, '{');
+            $lastBrace = strrpos($rawBody, '}');
+            $firstSquare = strpos($rawBody, '[');
+            $lastSquare = strrpos($rawBody, ']');
+
+            $start = false;
+            $end = false;
+
+            if ($firstBrace !== false && ($firstSquare === false || $firstBrace < $firstSquare)) {
+                $start = $firstBrace;
+                $end = $lastBrace;
+            } elseif ($firstSquare !== false) {
+                $start = $firstSquare;
+                $end = $lastSquare;
+            }
+
+            if ($start !== false && $end !== false) {
+                $cleanBody = substr($rawBody, $start, $end - $start + 1);
+            }
+        }
+
+        return json_decode($cleanBody, true);
     }
 }
