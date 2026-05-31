@@ -162,7 +162,8 @@ class SyncNewsJob implements ShouldQueue
                 $wpPostId = $postDataResult['id'] ?? null;
 
                 if (!$wpPostId) {
-                    throw new \Exception("Gagal mendapatkan ID postingan dari respons WordPress.");
+                    $msg = "Gagal mendapatkan ID postingan dari respons WordPress. Berita: " . $berita->judul . "Website: " . $baseUrl;
+                    throw new \Exception($msg);
                 }
 
                 $wpDetailUrl = $baseUrl . '/?p=' . $wpPostId;
