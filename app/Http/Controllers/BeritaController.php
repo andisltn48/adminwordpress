@@ -188,6 +188,20 @@ class BeritaController extends Controller
     }
 
     /**
+     * Re-post the berita to a specific website that previously failed.
+     */
+    public function retryWebsite(Berita $berita, Website $website)
+    {
+        if (!$berita->websites()->where('websites.id', $website->id)->exists()) {
+            return redirect()->back()->with('error', 'Gagal: Berita tidak terhubung dengan website tersebut.');
+        }
+
+        \App\Jobs\SyncNewsJob::dispatch($berita, $website, auth()->id());
+
+        return redirect()->back()->with('success', 'Berhasil menjadwalkan ulang posting ke ' . $website->nama_website . '. Hasil akan diperbarui otomatis di latar belakang.');
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Berita $berita)

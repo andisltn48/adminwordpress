@@ -86,14 +86,46 @@
                                             </svg>
                                         </span>
                                     </div>
-                                    <div class="flex flex-col gap-1">
-                                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">URL
-                                            Detail:</span>
-                                        <a href="{{ $web->pivot->detail_url }}" target="_blank"
-                                            class="text-xs text-primary-600 font-medium hover:underline break-all">
-                                            {{ $web->pivot->detail_url }}
-                                        </a>
-                                    </div>
+                                    @if ($web->pivot->detail_url)
+                                        <div class="flex flex-col gap-1">
+                                            <span
+                                                class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">URL
+                                                Detail:</span>
+                                            <a href="{{ $web->pivot->detail_url }}" target="_blank"
+                                                class="text-xs text-primary-600 font-medium hover:underline break-all">
+                                                {{ $web->pivot->detail_url }}
+                                            </a>
+                                        </div>
+                                    @else
+                                        <div class="flex flex-col gap-2">
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold rounded-lg uppercase tracking-wider w-fit">
+                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.74-3L13.74 4a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z" />
+                                                </svg>
+                                                Gagal Diposting
+                                            </span>
+                                            <form
+                                                action="{{ route('beritas.retry_website', [$berita->id, $web->id]) }}"
+                                                method="POST"
+                                                onsubmit="return confirm('Post ulang berita ini ke {{ $web->nama_website }}?')">
+                                                @csrf
+                                                <button type="submit"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white text-xs font-bold rounded-lg hover:bg-primary-700 active:bg-primary-800 transition-colors shadow-sm">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                    Post Ulang
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
 

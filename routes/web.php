@@ -60,6 +60,10 @@ Route::middleware("auth")->group(function () {
     ])->name("histories.index");
     Route::resource("websites", WebsiteController::class);
     Route::resource("beritas", BeritaController::class);
+    Route::post("beritas/{berita}/websites/{website}/retry", [
+        BeritaController::class,
+        "retryWebsite",
+    ])->name("beritas.retry_website");
     Route::post("beritas/upload-image", [
         BeritaController::class,
         "uploadImage",
